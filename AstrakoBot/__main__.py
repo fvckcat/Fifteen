@@ -52,7 +52,7 @@ def get_readable_time(seconds: int) -> str:
 
 PM_START_TEXT = """
 Hi {}, my name is {}! 
-I am a modular group management bot.
+I am a modular group management bot telegram.
 
 You can find my list of available commands with /help.
 """
@@ -200,24 +200,22 @@ def start(update: Update, context: CallbackContext):
                 reply_markup=InlineKeyboardMarkup(
                     [[
                         InlineKeyboardButton(
-                            text="Add AstrakoBot to your group",
+                            text="☑ Add To Group",
                             url="t.me/{}?startgroup=true".format(
                                 context.bot.username))
                     ],
                      [
                          InlineKeyboardButton(
-                             text="Support Group",
-                             url=f"https://t.me/AstrakoBotSupport"),
+                             text="Channel Owner",
+                             url=f"https://t.me/LiuAlvinasMahaputra"),
+                         InlineKeyboardButton(
+                             text="Telegram",
+                             url="https://t.me/LiuAlvinas")
                      ],
                      [
                          InlineKeyboardButton(
-                             text="Getting started guide",
-                             url="https://t.me/OnePunchUpdates/29")
-                     ],
-                     [
-                         InlineKeyboardButton(
-                             text="Source code",
-                             url="https://github.com/Astrako/AstrakoBot")
+                             text="Instagram",
+                             url="https://instagram.com/liualvinas_")
                      ]]))
     else:
         update.effective_message.reply_text(
