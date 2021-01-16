@@ -52,7 +52,7 @@ def get_readable_time(seconds: int) -> str:
 
 PM_START_TEXT = """
 Hi {}, my name is {}! 
-I am a modular group management bot
+I am a modular group management bot 
 I am bot for help you to manage your group
 You can find my list of available commands with /help.
 """
@@ -77,7 +77,7 @@ And the following:
     dispatcher.bot.first_name, ""
     if not ALLOW_EXCL else "\nAll commands can either be used with / or !.\n")
 
-ASTRAKOBOT_IMG = "https://telegra.ph/file/962df292464709bdbfbb8.jpg"
+ASTRAKOBOT_IMG = "https://telegra.ph/file/53507b88c10d875e9f855.jpg"
 
 DONATE_STRING = """Heya, glad to hear you want to donate!
 AstrakoBot is hosted on its own server and doesn't require any donations as of now but \
