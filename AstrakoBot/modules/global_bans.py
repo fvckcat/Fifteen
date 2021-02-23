@@ -2,10 +2,17 @@ import html
 import time
 from datetime import datetime
 from io import BytesIO
-from AstrakoBot.modules.sql.users_sql import get_user_com_chats
+
+from telegram import ParseMode, Update
+from telegram.error import BadRequest, TelegramError, Unauthorized
+from telegram.ext import (CallbackContext, CommandHandler, Filters,
+                          MessageHandler, run_async)
+from telegram.utils.helpers import mention_html
+
 import AstrakoBot.modules.sql.global_bans_sql as sql
+from AstrakoBot.modules.sql.users_sql import get_user_com_chats
 from AstrakoBot import (DEV_USERS, EVENT_LOGS, OWNER_ID, STRICT_GBAN, DRAGONS,
-                          SUPPORT_CHAT, SPAMWATCH_SUPPORT_CHAT, DEMONS, TIGERS,
+                          SUPPORT_CHAT, SPAMWATCH_SUPPORT_CHAT, DEMONS,
                           WOLVES, sw, dispatcher)
 from AstrakoBot.modules.helper_funcs.chat_status import (is_user_admin,
                                                            support_plus,
@@ -13,12 +20,6 @@ from AstrakoBot.modules.helper_funcs.chat_status import (is_user_admin,
 from AstrakoBot.modules.helper_funcs.extraction import (extract_user,
                                                           extract_user_and_text)
 from AstrakoBot.modules.helper_funcs.misc import send_to_list
-from AstrakoBot.modules.sql.users_sql import get_all_chats
-from telegram import ParseMode, Update
-from telegram.error import BadRequest, TelegramError
-from telegram.ext import (CallbackContext, CommandHandler, Filters,
-                          MessageHandler, run_async)
-from telegram.utils.helpers import mention_html
 
 GBAN_ENFORCE_GROUP = 6
 
@@ -70,27 +71,23 @@ def gban(update: Update, context: CallbackContext):
 
     if int(user_id) in DEV_USERS:
         message.reply_text(
-            "That user is part of the Association\nI can't act against our own."
+            "This is a developer user\nI can't act against our own."
         )
         return
 
     if int(user_id) in DRAGONS:
         message.reply_text(
-            "I spy, with my little eye... a disaster! Why are you guys turning on each other?"
+            "I spy, with my little eye... a sudo user! Why are you guys turning on each other?"
         )
         return
 
     if int(user_id) in DEMONS:
         message.reply_text(
-            "OOOH someone's trying to gban a Demon Disaster! *grabs popcorn*")
-        return
-
-    if int(user_id) in TIGERS:
-        message.reply_text("That's a Tiger! They cannot be banned!")
+            "OOOH someone's trying to gban a support user! *grabs popcorn*")
         return
 
     if int(user_id) in WOLVES:
-        message.reply_text("That's a Wolf! They cannot be banned!")
+        message.reply_text("That's a whitelist user! They cannot be banned!")
         return
 
     if user_id == bot.id:
@@ -383,7 +380,7 @@ def check_and_ban(update, user_id, should_message=True):
     chat = update.effective_chat  # type: Optional[Chat]
     try:
         sw_ban = sw.get_ban(int(user_id))
-    except AttributeError:
+    except:
         sw_ban = None
 
     if sw_ban:
@@ -415,9 +412,12 @@ def check_and_ban(update, user_id, should_message=True):
 def enforce_gban(update: Update, context: CallbackContext):
     # Not using @restrict handler to avoid spamming - just ignore if cant gban.
     bot = context.bot
-    if sql.does_chat_gban(
-            update.effective_chat.id) and update.effective_chat.get_member(
-                bot.id).can_restrict_members:
+    try:
+        restrict_permission = update.effective_chat.get_member(
+            bot.id).can_restrict_members
+    except Unauthorized:
+        return
+    if sql.does_chat_gban(update.effective_chat.id) and restrict_permission:
         user = update.effective_user
         chat = update.effective_chat
         msg = update.effective_message
@@ -471,7 +471,7 @@ def __user_info__(user_id):
         return ""
     if user_id == dispatcher.bot.id:
         return ""
-    if int(user_id) in DRAGONS + TIGERS + WOLVES:
+    if int(user_id) in DRAGONS + WOLVES:
         return ""
     if is_gbanned:
         text = text.format("Yes")

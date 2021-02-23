@@ -5,7 +5,7 @@ import time
 from functools import partial
 
 import AstrakoBot.modules.sql.welcome_sql as sql
-from AstrakoBot import (DEV_USERS, LOGGER, OWNER_ID, DRAGONS, DEMONS, TIGERS,
+from AstrakoBot import (DEV_USERS, LOGGER, OWNER_ID, DRAGONS, DEMONS,
                           WOLVES, sw, dispatcher, JOIN_LOGGER)
 from AstrakoBot.modules.helper_funcs.chat_status import (
     is_user_ban_protected,
@@ -82,7 +82,13 @@ def send(update, message, keyboard, backup_message):
             reply_to_message_id=reply,
         )
     except BadRequest as excp:
-        if excp.message == "Button_url_invalid":
+        if excp.message == "Reply message not found":
+            msg = update.effective_message.reply_text(
+                message,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=keyboard,
+                quote=False)
+        elif excp.message == "Button_url_invalid":
             msg = update.effective_message.reply_text(
                 markdown_parser(
                     backup_message +
@@ -150,7 +156,7 @@ def new_member(update: Update, context: CallbackContext):
         welcome_bool = True
         media_wel = False
 
-        if sw != None:
+        if sw is not None:
             sw_ban = sw.get_ban(new_mem.id)
             if sw_ban:
                 return
@@ -181,7 +187,7 @@ def new_member(update: Update, context: CallbackContext):
             # Welcome Devs
             elif new_mem.id in DEV_USERS:
                 update.effective_message.reply_text(
-                    "Whoa! A member of the Heroes Association just joined!",
+                    "Whoa! A developer user just joined!",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -189,7 +195,7 @@ def new_member(update: Update, context: CallbackContext):
             # Welcome Sudos
             elif new_mem.id in DRAGONS:
                 update.effective_message.reply_text(
-                    "Huh! A Dragon disaster just joined! Stay Alert!",
+                    "Huh! A sudo user just joined! Stay Alert!",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -197,22 +203,15 @@ def new_member(update: Update, context: CallbackContext):
             # Welcome Support
             elif new_mem.id in DEMONS:
                 update.effective_message.reply_text(
-                    "Huh! Someone with a Demon disaster level just joined!",
+                    "Huh! A support user just joined!",
                     reply_to_message_id=reply,
                 )
                 continue
 
             # Welcome Whitelisted
-            elif new_mem.id in TIGERS:
-                update.effective_message.reply_text(
-                    "Oof! A Tiger disaster just joined!",
-                    reply_to_message_id=reply)
-                continue
-
-            # Welcome Tigers
             elif new_mem.id in WOLVES:
                 update.effective_message.reply_text(
-                    "Oof! A Wolf disaster just joined!",
+                    "Oof! A whitelist user just joined!",
                     reply_to_message_id=reply)
                 continue
 
@@ -228,13 +227,15 @@ def new_member(update: Update, context: CallbackContext):
                     bot.send_message(
                         JOIN_LOGGER,
                         "#NEW_GROUP\n<b>Group name:</b> {}\n<b>ID:</b> <code>{}</code>\n<b>Creator:</b> <code>{}</code>"
-                        .format(chat.title, chat.id, creator),
+                        .format(
+                            html.escape(chat.title), chat.id,
+                            html.escape(creator)),
                         parse_mode=ParseMode.HTML)
                 else:
                     bot.send_message(
                         JOIN_LOGGER,
                         "#NEW_GROUP\n<b>Group name:</b> {}\n<b>ID:</b> <code>{}</code>"
-                        .format(chat.title, chat.id),
+                        .format(html.escape(chat.title), chat.id),
                         parse_mode=ParseMode.HTML)
                 update.effective_message.reply_text(
                     "Hello everybody!", reply_to_message_id=reply)
@@ -353,16 +354,16 @@ def new_member(update: Update, context: CallbackContext):
                                 "keyboard": keyboard,
                             }
                         })
-                    new_join_mem = f"[{escape_markdown(new_mem.first_name)}](tg://user?id={user.id})"
+                    new_join_mem = f'<a href="tg://user?id={user.id}">{html.escape(new_mem.first_name)}</a>'
                     message = msg.reply_text(
-                        f"{new_join_mem}, click the button below to prove you're human.\nYou have 120 seconds.",
+                        f"{new_join_mem}, click the button below to prove you're human.\nYou have 60 seconds.",
                         reply_markup=InlineKeyboardMarkup([{
                             InlineKeyboardButton(
                                 text="Yes, I'm human.",
                                 callback_data=f"user_join_({new_mem.id})",
                             )
                         }]),
-                        parse_mode=ParseMode.MARKDOWN,
+                        parse_mode=ParseMode.HTML,
                         reply_to_message_id=reply,
                     )
                     bot.restrict_chat_member(
@@ -382,7 +383,7 @@ def new_member(update: Update, context: CallbackContext):
                     job_queue.run_once(
                         partial(check_not_bot, new_mem, chat.id,
                                 message.message_id),
-                        120,
+                        60,
                         name="welcomemute",
                     )
 
@@ -465,7 +466,7 @@ def left_member(update: Update, context: CallbackContext):
         if left_mem:
 
             # Thingy for spamwatched users
-            if sw != None:
+            if sw is not None:
                 sw_ban = sw.get_ban(left_mem.id)
                 if sw_ban:
                     return
@@ -487,7 +488,7 @@ def left_member(update: Update, context: CallbackContext):
             # Give the devs a special goodbye
             elif left_mem.id in DEV_USERS:
                 update.effective_message.reply_text(
-                    "See you later at the Hero's Association!",
+                    "See you later dev!",
                     reply_to_message_id=reply,
                 )
                 return
@@ -766,7 +767,7 @@ def welcomemute(update: Update, context: CallbackContext) -> str:
         elif args[0].lower() in ["strong"]:
             sql.set_welcome_mutes(chat.id, "strong")
             msg.reply_text(
-                "I will now mute people when they join until they prove they're not a bot.\nThey will have 120seconds before they get kicked."
+                "I will now mute people when they join until they prove they're not a bot.\nThey will have 60 seconds before they get kicked."
             )
             return (
                 f"<b>{html.escape(chat.title)}:</b>\n"
@@ -775,16 +776,16 @@ def welcomemute(update: Update, context: CallbackContext) -> str:
                 f"Has toggled welcome mute to <b>STRONG</b>.")
         else:
             msg.reply_text(
-                "Please enter `off`/`no`/`soft`/`strong`!",
-                parse_mode=ParseMode.MARKDOWN,
+                "Please enter <code>off</code>/<code>no</code>/<code>soft</code>/<code>strong</code>!",
+                parse_mode=ParseMode.HTML,
             )
             return ""
     else:
         curr_setting = sql.welcome_mutes(chat.id)
         reply = (
-            f"\n Give me a setting!\nChoose one out of: `off`/`no` or `soft` or `strong` only! \n"
-            f"Current setting: `{curr_setting}`")
-        msg.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
+            f"\n Give me a setting!\nChoose one out of: <code>off</code>/<code>no</code> or <code>soft</code> or <code>strong</code> only! \n"
+            f"Current setting: <code>{curr_setting}</code>")
+        msg.reply_text(reply, parse_mode=ParseMode.HTML)
         return ""
 
 
@@ -846,18 +847,21 @@ def cleanservice(update: Update, context: CallbackContext) -> str:
                     "Welcome clean service is : on")
             else:
                 update.effective_message.reply_text(
-                    "Invalid option", parse_mode=ParseMode.MARKDOWN)
+                    "Invalid option", parse_mode=ParseMode.HTML)
         else:
             update.effective_message.reply_text(
-                "Usage is on/yes or off/no", parse_mode=ParseMode.MARKDOWN)
+                "Usage is <code>on</code>/<code>yes</code> or <code>off</code>/<code>no</code>",
+                parse_mode=ParseMode.HTML)
     else:
         curr = sql.clean_service(chat.id)
         if curr:
             update.effective_message.reply_text(
-                "Welcome clean service is : on", parse_mode=ParseMode.MARKDOWN)
+                "Welcome clean service is : <code>on</code>",
+                parse_mode=ParseMode.HTML)
         else:
             update.effective_message.reply_text(
-                "Welcome clean service is : off", parse_mode=ParseMode.MARKDOWN)
+                "Welcome clean service is : <code>off</code>",
+                parse_mode=ParseMode.HTML)
 
 
 @run_async
@@ -871,6 +875,7 @@ def user_button(update: Update, context: CallbackContext):
     join_user = int(match.group(1))
 
     if join_user == user.id:
+        sql.set_human_checks(user.id, chat.id)
         member_dict = VERIFIED_USER_WAITLIST.pop(user.id)
         member_dict["status"] = True
         VERIFIED_USER_WAITLIST.update({user.id: member_dict})
@@ -889,7 +894,10 @@ def user_button(update: Update, context: CallbackContext):
                 can_add_web_page_previews=True,
             ),
         )
-        bot.deleteMessage(chat.id, message.message_id)
+        try:
+            bot.deleteMessage(chat.id, message.message_id)
+        except:
+            pass
         if member_dict["should_welc"]:
             if member_dict["media_wel"]:
                 sent = ENUM_FUNC_MAP[member_dict["welc_type"]](
@@ -952,7 +960,7 @@ WELC_MUTE_HELP_TXT = (
     "• `/welcomemute soft`*:* restricts new members from sending media for 24 hours.\n"
     "• `/welcomemute strong`*:* mutes new members till they tap on a button thereby verifying they're human.\n"
     "• `/welcomemute off`*:* turns off welcomemute.\n"
-    "*Note:* Strong mode kicks a user from the chat if they dont verify in 120seconds. They can always rejoin though"
+    "*Note:* Strong mode kicks a user from the chat if they dont verify in 60 seconds. They can always rejoin though"
 )
 
 
@@ -987,8 +995,8 @@ def __migrate__(old_chat_id, new_chat_id):
 
 
 def __chat_settings__(chat_id, user_id):
-    welcome_pref, _, _ = sql.get_welc_pref(chat_id)
-    goodbye_pref, _, _ = sql.get_gdbye_pref(chat_id)
+    welcome_pref = sql.get_welc_pref(chat_id)[0]
+    goodbye_pref = sql.get_gdbye_pref(chat_id)[0]
     return ("This chat has it's welcome preference set to `{}`.\n"
             "It's goodbye preference is `{}`.".format(welcome_pref,
                                                       goodbye_pref))

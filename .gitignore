@@ -19,3 +19,5 @@ env
 AstrakoBot.session-journal
 updates.txt
 *.exe
+resources
+shell_output.txt

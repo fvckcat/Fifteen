@@ -12,7 +12,7 @@ async def purge_messages(event):
         return
 
     if not await user_is_admin(
-            user_id=event.from_id, message=event) and event.from_id not in [
+            user_id=event.sender_id, message=event) and event.from_id not in [
                 1087968824
             ]:
         await event.reply("Only Admins are allowed to use this command")
@@ -38,7 +38,10 @@ async def purge_messages(event):
             await event.client.delete_messages(event.chat_id, messages)
             messages = []
 
-    await event.client.delete_messages(event.chat_id, messages)
+    try:
+        await event.client.delete_messages(event.chat_id, messages)
+    except:
+        pass
     time_ = time.perf_counter() - start
     text = f"Purged Successfully in {time_:0.2f} Second(s)"
     await event.respond(text, parse_mode='markdown')
@@ -50,7 +53,7 @@ async def delete_messages(event):
         return
 
     if not await user_is_admin(
-            user_id=event.from_id, message=event) and event.from_id not in [
+            user_id=event.sender_id, message=event) and event.from_id not in [
                 1087968824
             ]:
         await event.reply("Only Admins are allowed to use this command")
@@ -71,9 +74,9 @@ async def delete_messages(event):
 
 __help__ = """
 *Admin only:*
- - /del: deletes the message you replied to
- - /purge: deletes all messages between this and the replied to message.
- - /purge <integer X>: deletes the replied message, and X messages following it if replied to a message.
+ • `/del`: deletes the message you replied to
+ • `/purge`: deletes all messages between this and the replied to message.
+ • `/purge <integer X>`: deletes the replied message, and X messages following it if replied to a message.
 """
 
 __mod_name__ = "Purges"

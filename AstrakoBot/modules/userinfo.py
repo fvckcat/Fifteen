@@ -14,7 +14,7 @@ from telegram.ext.dispatcher import run_async
 from telegram.error import BadRequest
 from telegram.utils.helpers import escape_markdown, mention_html
 
-from AstrakoBot import (DEV_USERS, OWNER_ID, DRAGONS, DEMONS, TIGERS, WOLVES,
+from AstrakoBot import (DEV_USERS, OWNER_ID, DRAGONS, DEMONS, WOLVES,
                           INFOPIC, dispatcher, sw)
 from AstrakoBot.__main__ import STATS, TOKEN, USER_INFO
 import AstrakoBot.modules.sql.userinfo_sql as sql
@@ -22,10 +22,9 @@ from AstrakoBot.modules.disable import DisableAbleCommandHandler
 from AstrakoBot.modules.sql.global_bans_sql import is_user_gbanned
 from AstrakoBot.modules.sql.afk_sql import is_afk, check_afk_status
 from AstrakoBot.modules.sql.users_sql import get_user_num_chats
-from AstrakoBot.modules.sql.feds_sql import get_user_fbanlist
 from AstrakoBot.modules.helper_funcs.chat_status import sudo_plus
 from AstrakoBot.modules.helper_funcs.extraction import extract_user
-from AstrakoBot import telethn as AstrakoBotTelethonClient, TIGERS, DRAGONS, DEMONS
+from AstrakoBot import telethn as AstrakoBotTelethonClient, DRAGONS, DEMONS
 
 
 @run_async
@@ -72,7 +71,7 @@ def get_id(update: Update, context: CallbackContext):
 @AstrakoBotTelethonClient.on(
     events.NewMessage(
         pattern='/ginfo ',
-        from_users=(TIGERS or []) + (DRAGONS or []) + (DEMONS or [])))
+        from_users=(DRAGONS or []) + (DEMONS or [])))
 async def group_info(event) -> None:
     chat = event.text.split(' ', 1)[1]
     try:
@@ -187,27 +186,24 @@ def info(update: Update, context: CallbackContext):
     disaster_level_present = False
 
     if user.id == OWNER_ID:
-        text += "\n\nThe Disaster level of this person is 'God'."
+        text += "\n\nUser level: <b>god</b>"
         disaster_level_present = True
     elif user.id in DEV_USERS:
-        text += "\n\nThis user is member of 'Hero Association'."
+        text += "\n\nUser level: <b>developer</b>"
         disaster_level_present = True
     elif user.id in DRAGONS:
-        text += "\n\nThe Disaster level of this person is 'Dragon'."
+        text += "\n\nUser level: <b>sudo</b>"
         disaster_level_present = True
     elif user.id in DEMONS:
-        text += "\n\nThe Disaster level of this person is 'Demon'."
-        disaster_level_present = True
-    elif user.id in TIGERS:
-        text += "\n\nThe Disaster level of this person is 'Tiger'."
+        text += "\n\nUser level: <b>support</b>"
         disaster_level_present = True
     elif user.id in WOLVES:
-        text += "\n\nThe Disaster level of this person is 'Wolf'."
+        text += "\n\nUser level: <b>whitelist</b>"
         disaster_level_present = True
 
-    if disaster_level_present:
-        text += ' [<a href="https://t.me/OnePunchUpdates/155">?</a>]'.format(
-            bot.username)
+    # if disaster_level_present:
+    #     text += ' [<a href="https://t.me/OnePunchUpdates/155">?</a>]'.format(
+    #         bot.username)
 
     try:
         user_member = chat.get_member(user.id)
@@ -376,7 +372,7 @@ def set_about_bio(update: Update, context: CallbackContext):
 
         if user_id == bot.id and sender_id not in DEV_USERS:
             message.reply_text(
-                "Erm... yeah, I only trust Heroes Association to set my bio.")
+                "Erm... yeah, I only trust developer users to set my bio.")
             return
 
         text = message.text
